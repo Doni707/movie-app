@@ -18,11 +18,12 @@ class AppListItem extends Component {
 
 
   render() {
-    const { name, viewers, watched, id, like } = this.props
+    const { name, views, watched, liked } = this.props
+    const id = this.props._id
     return (
-      <li className={`list-group-item d-flex justify-content-between ${watched && "watched"} ${like && "like"}`}>
-        <span className='list-group-item-label' onClick={() => this.likeAndWatchedHandler("like", id)}>{name}</span>
-        <input type="number" className='list-group-item-input' defaultValue={viewers} />
+      <li className={`list-group-item d-flex justify-content-between ${watched && "watched"} ${liked && "liked"}`}>
+        <span className='list-group-item-label' onClick={() => this.likeAndWatchedHandler("liked", id)}>{name}</span>
+        <input type="number" className='list-group-item-input' defaultValue={views} />
         <div className='d-flex justify-content-center align-items-center'>
           <button className='btn-cookie btn-sm' onClick={() => this.likeAndWatchedHandler("watched" ,id)}>
             <i className='fas fa-cookie'></i>

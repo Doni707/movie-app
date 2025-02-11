@@ -5,7 +5,7 @@ const AppList = ({ data, watchedHandler, deleteHandler}) => {
   return (
     <ul className='app-list'>
       {data.map(item => (
-        <AppListItem {...item}  key={item.id} watchedHandler={watchedHandler} deleteHandler={deleteHandler} />
+        <AppListItem {...item}  key={item._id} watchedHandler={watchedHandler} deleteHandler={deleteHandler} />
       ))}
     </ul>
   )

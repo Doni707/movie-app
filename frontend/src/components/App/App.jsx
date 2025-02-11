@@ -5,48 +5,41 @@ import AppFilter from "../AppFilter/AppFilter"
 import SearchPanel from "../SearchPanel/SearchPanel"
 import AppList from '../AppList/AppList'
 import AppForm from '../AppForm/AppForm'
+import MovieService from '../../services/movie'
+import Pagination from '../Pagination/Pagination'
 const App = () => {
-  const defaultData = [
-    {
-      name: "Empire of Osman",
-      viewers: 811,
-      id: 1,
-      watched: false,
-      liked: false
-    },
-    {
-      name: "Ertugrul",
-      viewers: 811,
-      id: 2,
-      watched: false,
-      liked: false
-    },
-    {
-      name: "Solo leveling",
-      viewers: 999999,
-      id: 3,
-      watched: true,
-      liked: false
-    },
-  ]
-
-  const [data, setData] = useState(defaultData)
-  const [term, setTerm] = useState("")
+  const [data, setData] = useState([])
+  const [isLoading, setLoading] = useState(false)
   const [filter, setFilter] = useState("all")
-  function addMovie({ name, views }) {
+  const [page, setPage] = useState(0)
+  const [pagination, setPagination] = useState([])
+  useEffect(() => {
+    if (data.length === 0) {
+      setLoading(true)
+      MovieService.all("all").then(({ data }) => {
+        const { movies, length } = data
+        const len = Math.ceil(length / 5)
+        const paginationList = new Array(len).fill("")
+        setPagination(paginationList)
+        setData(movies)
+      }).finally(() => setLoading(false))
+    }
+  }, [filter, page])
+  const [term, setTerm] = useState("")
+  async function addMovie({ name, views }) {
     const item = {
       name,
-      viewers: +views,
-      id: Date.now(),
+      views: +views,
       watched: false,
       liked: false
     }
-    setData([...data, item])
+    const result = await MovieService.add(item)
+    setData([...data, result.data])
   }
 
-  const watchedHandler = (type, id) => {
+  const watchedHandler = async (type, id) => {
     const changedData = data.map((item) => {
-      if (item.id === id) {
+      if (item._id === id) {
         return {
           ...item,
           [type]: !item[type]
@@ -54,12 +47,13 @@ const App = () => {
       }
       return item
     })
-
+    await MovieService.action(id, type)
     setData(changedData)
   }
 
-  const deleteHandler = (id) => {
-    const newData = data.filter(item => item.id !== id)
+  const deleteHandler = async (id) => {
+    const newData = data.filter(item => item._id !== id)
+    await MovieService.delete(id)
     setData(newData)
   }
 
@@ -81,11 +75,23 @@ const App = () => {
     if (filter === "all") {
       return arr
     };
+
     return arr.filter(item => item[filter])
   }
 
   const updateFilter = (filter) => {
     setFilter(filter)
+  }
+
+  const handlerPagination = (page) => {
+    setPage(page)
+    setLoading(true)
+    MovieService.all("all", page-1).then(({ data }) => {
+      const { movies} = data
+      console.log(page)
+      console.log(movies)
+      setData(movies)
+    }).finally(() => setLoading(false))
   }
 
 
@@ -97,7 +103,15 @@ const App = () => {
           <SearchPanel updateTerm={updateTerm} />
           <AppFilter updateFilter={updateFilter} />
         </div>
-        <AppList data={filterHandler(searchHandler(data, term), filter)} watchedHandler={watchedHandler} deleteHandler={deleteHandler} />
+        {isLoading ? <>
+          <div className='search-panel d-flex justify-center'>
+            <h1 className='text-danger text-center w-100'>Loading</h1>
+          </div>
+        </> : <>
+          <AppList data={filterHandler(searchHandler(data, term), filter)} watchedHandler={watchedHandler} deleteHandler={deleteHandler} />
+          <Pagination pagination={pagination} page={page} setPagination={handlerPagination} />
+        </>}
+
         <AppForm addMovie={addMovie} />
       </div>
     </div>

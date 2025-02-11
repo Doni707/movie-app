@@ -4,7 +4,7 @@ const SearchPanel = ({ updateTerm }) => {
   const [term, setTerm] = useState("")
   const search = (e) => {
     setTerm(e.target.value)
-    updateTerm(term)
+    updateTerm(e.target.value)
   } 
 
   return (
